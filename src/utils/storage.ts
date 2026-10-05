@@ -2,7 +2,7 @@ import { Parent, Holiday } from '../types'
 import { TOTAL_PARENTS, TOTAL_PORTIONS } from './fruits'
 
 const STORAGE_KEYS = {
-  PARENTS: 'meyve_parents_v1',
+  PARENTS: 'meyve_parents_v2',
   START_DATE: 'meyve_start_date_v1',
   CUSTOM_HOLIDAYS: 'meyve_custom_holidays_v1',
   DISABLED_HOLIDAYS: 'meyve_disabled_holidays_v1',
@@ -10,11 +10,36 @@ const STORAGE_KEYS = {
   PORTIONS: 'meyve_portions_v1'
 }
 
-// Generate default 21 parents
+// Listedeki 21 veli (Anne Adı Soyadı)
+export const INITIAL_PARENT_NAMES: string[] = [
+  'Safiye Şentürk',        // 1
+  'Rahime Güzeller',       // 2
+  'Sevda Oyankaya',        // 3
+  'Emel Buldu',            // 4
+  'Mehtap Erbaş',          // 5
+  'Gülşah Maraşlıoğlu',    // 6
+  'Merve Balıkçı',         // 7
+  'Gülnihal Özmumcu',      // 8
+  'Hatice Yıldırım',       // 9
+  'Gülbahar Tatlı',        // 10
+  'Merve Yörük',           // 11
+  'Hilal Karakaş',         // 12
+  'Mukadder Rabia Demir',  // 13
+  'Büşra Tetik',           // 14
+  'Kader Çakırlar',        // 15
+  'Esra Ağarlıoğlu',       // 16
+  'Büşra Kartal',          // 17
+  'Haver Kiciroğlu',       // 18
+  'Vedia Naz Maltaş',      // 19
+  'Eda Kızıltan',          // 20
+  'Gizem Kuruk'            // 21
+]
+
+// Generate default 21 parents with list names
 export function getDefaultParents(): Parent[] {
   return Array.from({ length: TOTAL_PARENTS }, (_, i) => ({
     id: i + 1,
-    name: '',
+    name: INITIAL_PARENT_NAMES[i] || '',
     childName: '',
     phone: '',
     notes: ''
@@ -23,14 +48,22 @@ export function getDefaultParents(): Parent[] {
 
 export function loadParents(): Parent[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.PARENTS)
-    if (!raw) return getDefaultParents()
-    const parsed: Parent[] = JSON.parse(raw)
-    // Ensure all 21 parents exist
     const defaultParents = getDefaultParents()
+    const raw = localStorage.getItem(STORAGE_KEYS.PARENTS)
+    if (!raw) {
+      saveParents(defaultParents)
+      return defaultParents
+    }
+    const parsed: Parent[] = JSON.parse(raw)
+    // Ensure all 21 parents exist and inherit names if missing/empty
     return defaultParents.map(dp => {
       const found = parsed.find(p => p.id === dp.id)
-      return found ? { ...dp, ...found } : dp
+      if (!found) return dp
+      return {
+        ...dp,
+        ...found,
+        name: found.name && found.name.trim() ? found.name : dp.name
+      }
     })
   } catch (e) {
     console.error('Failed to load parents:', e)
